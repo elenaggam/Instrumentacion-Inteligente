@@ -10,7 +10,8 @@ freq=np.logspace(np.log10(100), np.log10(1e7), pasos)
 resources=pv.ResourceManager()
 resources.list_resources()
 
-instrument=resources.open_resource('USB0::0x0957::0x179B::MY51250756::INSTR')
+# USB0::0x0957::0x179B::MY51250756::INSTR
+instrument=resources.open_resource('visa://155.210.95.128/USB0::0x0957::0x179B::MY51250757::INSTR')
 
 #no poner espacio tras :::::::
 instrument.write('wgen:outp 1')

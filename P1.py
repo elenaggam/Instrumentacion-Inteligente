@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pyvisa as pv
-
-
+import time as t
 
 
 # Instrumento
@@ -12,33 +11,74 @@ instrumento=resources.open_resource('visa://155.210.95.128/USB0::0x0957::0x179B:
 
 
 # Parámetros de la medición
-pasos = 10
+pasos = 56
+Vi=1
+fpot1=2
+fpot2=6
+freq=np.logspace(np.log10(10**fpot1), np.log10(10**fpot2), pasos)
+avg=8
+
+instrumento.timeout=5000
 
 
+
+# Archivo de datos
+file=open(f'Bode/flog{fpot1}-{fpot2}_steps{pasos}_avg{avg}_Vin{Vi}.txt', 'w')
 
 
 # Generar señal
 instrumento.write('wgen:outp 1')
-instrumento.write('wgen:func sin;volt 1;freq 1000;volt:offs 0')
-    # instrumento.write(f'wgen:freq {freq[i]}')
-    # instrumento.write(f'wgen:volt {volt[i]}')
-
-
-
-# Escalar ejes, ciclos, promedios ... 
+instrumento.write(f'wgen:func sin;volt {Vi};freq {freq[0]};volt:offs 0')
 instrumento.write('autoscale')
-instrumento.write('chan1:scale 0.5')
-instrumento.write('chan1:offset 0')
-instrumento.write('tim:range 0.001')
-instrumento.write('chan2:scale 0.5')
+instrumento.write(f'chan1:range {Vi*2.5}V')
 instrumento.write('chan2:offset 0')
+instrumento.write('chan1:offset 0')
+
+# promedios
+if avg>1:
+    instrumento.write('acq:type average')
+    instrumento.write(f'acq:count {avg}')
+else:
+    instrumento.write('acq:type normal')
+
+Vo=float(instrumento.query('meas:vpp? chan2'))
+
+# Barrido en frecuencia
+for i in range(pasos):
+    instrumento.write(f'wgen:freq {freq[i]}')
+
+    # Escalas
+    instrumento.write(f'chan2:range {Vo*3}V')    
+    instrumento.write(f'tim:range {5/freq[i]}')
+
+    # Medidas 
+    Vo=float(instrumento.query('meas:vpp? chan2'))
+    fase=float(instrumento.query('meas:phas? chan1, chan2'))
+    Vi=float(instrumento.query('meas:vpp? chan1'))
+
+    # Guardar datos
+    file.write(f'{freq[i]:.3f}\t{Vi:.3f}\t{Vo:.3f}\t{fase:.1f}\n')
 
 
 
-# Medidas
-medida1=float(instrumento.query('meas:vpp? chan2'))
-medida2=float(instrumento.query('meas:freq? chan2'))
-medida3=float(instrumento.query('meas:phas? chan1, chan2'))
+instrumento.close()
+file.close()
 
 
-#ficherooos
+
+
+# # Escalar ejes, ciclos, promedios ... 
+# instrumento.write('autoscale')
+# instrumento.write('chan1:scale 0.5')
+# instrumento.write('chan1:offset 0')
+# instrumento.write('tim:range 0.001')
+# instrumento.write('chan2:scale 0.5')
+# instrumento.write('chan2:offset 0')
+
+
+
+# # Medidas
+# medida1=float(instrumento.query('meas:vpp? chan2'))
+# medida2=float(instrumento.query('meas:freq? chan2'))
+# medida3=float(instrumento.query('meas:phas? chan1, chan2'))
+

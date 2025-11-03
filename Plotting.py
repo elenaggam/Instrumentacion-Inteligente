@@ -14,6 +14,9 @@ def bode_magnitude(freq, magn, directory=None, show=True):
     plt.plot(freq, log_magn, marker='o', linestyle='-')
     plt.xscale('log')
 
+    x=np.log(np.logspace(np.log10(min(freq)), np.log10(1e4), 100))
+    #plt.plot(x, 20*x)
+
     if directory is not None:
         plt.savefig(directory+'Bode_Magnitud.png')
     if show:

@@ -11,11 +11,14 @@ instrumento=resources.open_resource('visa://155.210.95.128/USB0::0x0957::0x179B:
 
 
 # Parámetros de la medición
-pasos = 56
+pasos1=30
+pasos2=0
+pasos = pasos1+pasos2
 Vi=1
-fpot1=2
-fpot2=6
-freq=np.logspace(np.log10(10**fpot1), np.log10(10**fpot2), pasos)
+f1=10
+fmid=1e7
+f2=fmid
+freq=np.concatenate((np.logspace(np.log10(f1), np.log10(fmid), pasos1), np.logspace(np.log10(fmid), np.log10(f2), pasos2)))
 avg=8
 
 instrumento.timeout=5000
@@ -23,7 +26,7 @@ instrumento.timeout=5000
 
 
 # Archivo de datos
-file=open(f'Bode/flog{fpot1}-{fpot2}_steps{pasos}_avg{avg}_Vin{Vi}.txt', 'w')
+file=open(f'Bode/flog{f1}-{fmid}-{f2}_steps{pasos}_avg{avg}_Vin{Vi}.txt', 'w')
 
 
 # Generar señal

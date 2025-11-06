@@ -1,22 +1,44 @@
 import numpy as np
 
-def bandwidth(frequency, magnitude):
+def bandwidth_gain(freq, magn):
 
-    # identificamos la mayor ganancia (magnitud)
-    max_index = np.argmax(magnitude)
-    max_magnitude = magnitude[max_index]
+    #gain
+    max_index = np.argmax(magn)
+    max_magnitude = magn[max_index]
 
-    # calculamos el valor objetivo a -3 dB
+    #3db
     target = max_magnitude/np.sqrt(2)
 
-    # puntos donde la magnitud es la máxima o mayor que el objetivo
-    indices = np.where(magnitude >= target)
-    #ver si queremos interpolar o algo más sofisticado
-    f_low = frequency[indices[0]]
-    f_high = frequency[indices[-1]]
+    k=0
+    for i in range(len(magn)):
+        if magn[i]>=target:
+            k=i
+            break
+    
+    f_low = (target-magn[k-1])*(freq[k]-freq[k-1])/(magn[k]-magn[k-1])+freq[k-1]
+    
 
-    bandwidth = f_high - f_low
-    return bandwidth
+
+    return f_low, max_magnitude
+
+
+def stopband_attenuation(freq, magn):
+
+    #gain
+    magn2=20*np.log10(magn)
+    max_magn=20*np.log10(np.max(magn))
+    min_magn=max_magn-45
+
+    k=0
+    for i in range(len(magn)):
+        if magn2[i]>=min_magn:
+            k=i
+            break
+
+    f_stop = (min_magn-magn2[k-1])*(freq[k]-freq[k-1])/(magn2[k]-magn2[k-1])+freq[k-1]
+
+
+    return f_stop, min_magn
 
 
     

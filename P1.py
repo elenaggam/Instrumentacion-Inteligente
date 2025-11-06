@@ -7,17 +7,17 @@ import time as t
 # Instrumento
 resources=pv.ResourceManager()
 resources.list_resources()
-instrumento=resources.open_resource('visa://155.210.95.128/USB0::0x0957::0x179B::MY51250757::INSTR')
+instrumento=resources.open_resource('USB0::0x0957::0x179B::MY51250756::INSTR')
 
 
 # Parámetros de la medición
-pasos1=30
-pasos2=0
+pasos1=55
+pasos2=15
 pasos = pasos1+pasos2
 Vi=1
-f1=10
-fmid=1e7
-f2=fmid
+f1=1000
+fmid=40000
+f2=1e6
 freq=np.concatenate((np.logspace(np.log10(f1), np.log10(fmid), pasos1), np.logspace(np.log10(fmid), np.log10(f2), pasos2)))
 avg=8
 
@@ -26,7 +26,7 @@ instrumento.timeout=5000
 
 
 # Archivo de datos
-file=open(f'Bode/flog{f1}-{fmid}-{f2}_steps{pasos}_avg{avg}_Vin{Vi}.txt', 'w')
+file=open(f'Bode_exp/flog{f1}-{fmid}-{f2}_steps{pasos}_avg{avg}_Vin{Vi}.txt', 'w')
 
 
 # Generar señal
@@ -56,7 +56,7 @@ for i in range(pasos):
 
     # Medidas 
     Vo=float(instrumento.query('meas:vpp? chan2'))
-    fase=float(instrumento.query('meas:phas? chan1, chan2'))
+    fase=float(instrumento.query('meas:phas? chan2, chan1'))
     Vi=float(instrumento.query('meas:vpp? chan1'))
 
     # Guardar datos

@@ -3,6 +3,11 @@ import matplotlib.pyplot as plt
 import Analysis as A
 import Plotting as P
 
-freq, vi, magn, phase = np.loadtxt('Bode/flog10-10000000.0-10000000.0_steps30_avg8_Vin1.txt', unpack=True)
+freq, vi, magn, phase = np.loadtxt('Bode_exp/flog1000-40000-1000000.0_steps70_avg8_Vin1.txt', unpack=True)
 
-P.bode_plots(freq, magn, phase, directory='Bode/30st', show=True)
+f_low, max_magn = A.bandwidth_gain(freq, magn)
+f_cut, min_magn = A.stopband_attenuation(freq, magn)
+
+print(f_low, max_magn)
+P.bode_plots(freq, magn, phase, directory='Bode_exp/try2', show=True, f_low=f_low, max_magn=max_magn, f_cut=f_cut, min_magn=min_magn)
+

@@ -36,7 +36,7 @@ def stopband_attenuation(freq, magn):
             break
 
     f_stop = (min_magn-magn2[k-1])*(freq[k]-freq[k-1])/(magn2[k]-magn2[k-1])+freq[k-1]
-
+    min_magn = 10**(min_magn/20)
 
     return f_stop, min_magn
 

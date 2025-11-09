@@ -1,7 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import pyvisa as pv
-import time as t
 
 
 # Instrumento
@@ -10,7 +8,7 @@ resources.list_resources()
 instrumento=resources.open_resource('visa://155.210.95.128/USB0::0x0957::0x179B::MY51250757::INSTR')
 
 
-# Parámetros de la medición
+# Parámetros
 pasos1=50
 pasos2=20
 pasos = pasos1+pasos2
@@ -24,9 +22,8 @@ avg=8
 instrumento.timeout=5000
 
 
-
 # Archivo de datos
-file=open(f'Bode/DEF_flog{f1}-{fmid}-{f2}_steps{pasos}_avg{avg}_Vin{Vi}.txt', 'w')
+file=open(f'Bode/DEF_flog{f1:.0f}-{fmid:.0f}-{f2:.0f}_steps{pasos}_avg{avg}_Vin{Vi}.txt', 'w')
 
 
 # Generar señal
@@ -37,7 +34,8 @@ instrumento.write(f'chan1:range {Vi*2.5}V')
 instrumento.write('chan2:offset 0')
 instrumento.write('chan1:offset 0')
 
-# promedios
+
+# Promedios
 if avg>1:
     instrumento.write('acq:type average')
     instrumento.write(f'acq:count {avg}')
@@ -45,6 +43,7 @@ else:
     instrumento.write('acq:type normal')
 
 Vo=float(instrumento.query('meas:vpp? chan2'))
+
 
 # Barrido en frecuencia
 for i in range(pasos):
@@ -63,25 +62,5 @@ for i in range(pasos):
     file.write(f'{freq[i]:.3f}\t{Vi:.3f}\t{Vo:.3f}\t{fase:.1f}\n')
 
 
-
 instrumento.close()
 file.close()
-
-
-
-
-# # Escalar ejes, ciclos, promedios ... 
-# instrumento.write('autoscale')
-# instrumento.write('chan1:scale 0.5')
-# instrumento.write('chan1:offset 0')
-# instrumento.write('tim:range 0.001')
-# instrumento.write('chan2:scale 0.5')
-# instrumento.write('chan2:offset 0')
-
-
-
-# # Medidas
-# medida1=float(instrumento.query('meas:vpp? chan2'))
-# medida2=float(instrumento.query('meas:freq? chan2'))
-# medida3=float(instrumento.query('meas:phas? chan1, chan2'))
-

@@ -1,7 +1,5 @@
 import numpy as np
 import pyvisa as pv
-import time as t
-import matplotlib.pyplot as plt
 import Plotting as P
 
 pasos=30

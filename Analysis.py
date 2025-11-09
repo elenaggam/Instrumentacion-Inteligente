@@ -3,8 +3,7 @@ import numpy as np
 def bandwidth_gain(freq, magn):
 
     #gain
-    max_index = np.argmax(magn)
-    max_magnitude = magn[max_index]
+    max_magnitude = np.max(magn)
 
     #3db
     target = max_magnitude/np.sqrt(2)
@@ -17,8 +16,6 @@ def bandwidth_gain(freq, magn):
     
     f_low = (target-magn[k-1])*(freq[k]-freq[k-1])/(magn[k]-magn[k-1])+freq[k-1]
     
-
-
     return f_low, max_magnitude
 
 

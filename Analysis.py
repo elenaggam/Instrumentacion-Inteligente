@@ -38,4 +38,13 @@ def stopband_attenuation(freq, magn):
     return f_stop, min_magn
 
 
-    
+def slope_dB_decade(freq, magn):
+    f1 = freq[0]
+    f2 = 0
+    i=0
+    for k in range(len(freq)):
+        if freq[k] >= f1 * 10:
+            f2 = freq[k]
+            i=k
+            break
+    return (20*np.log10(magn[i])-20*np.log10(magn[0]))/(np.log10(freq[i])-np.log10(freq[0]))

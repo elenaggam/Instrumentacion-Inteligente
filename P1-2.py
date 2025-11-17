@@ -5,16 +5,16 @@ import pyvisa as pv
 # Instrumento
 resources=pv.ResourceManager()
 resources.list_resources()
-instrumento=resources.open_resource('USB0::0x0957::0x179B::MY51250756::INSTR')
+instrumento=resources.open_resource('USB0::0x0957::0x179B::MY51250757::INSTR')
 
 
 # Parámetros
 pasos1=20
-pasos2=0
+pasos2=60
 pasos = pasos1+pasos2
 Vi=1
-f1=10000
-fmid=5e5
+f1=100
+fmid=10000
 f2=5e5
 freq=np.concatenate((np.logspace(np.log10(f1), np.log10(fmid), pasos1), np.logspace(np.log10(fmid), np.log10(f2), pasos2)))
 avg=8
@@ -35,6 +35,7 @@ instrumento.write('chan2:offset 3V')
 instrumento.write('chan1:offset 1V')
 
 
+
 # Promedios
 if avg>1:
     instrumento.write('acq:type average')
@@ -50,7 +51,10 @@ for i in range(pasos):
     instrumento.write(f'wgen:freq {freq[i]}')
 
     # Escalas
-    instrumento.write(f'chan2:range {Vo*3}V')    
+    if freq[i]>=0.7e5:
+        instrumento.write('chan2:offset 4V')
+    else:
+        instrumento.write(f'chan2:range {Vo*2.5}V')    
     instrumento.write(f'tim:range {5/freq[i]}')
 
     # Medidas 

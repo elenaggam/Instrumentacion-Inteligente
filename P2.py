@@ -5,17 +5,17 @@ import pyvisa as pv
 # Instrumento
 resources=pv.ResourceManager()
 resources.list_resources()
-instrumento=resources.open_resource('USB0::0x0957::0x179B::MY51250757::INSTR')
+instrumento=resources.open_resource('USB0::0x0957::0x179B::MY51250756::INSTR')
 
 
 # Parámetros
-pasos1=20
-pasos2=60
+pasos1=30
+pasos2=50
 pasos = pasos1+pasos2
 Vi=1
 f1=100
 fmid=10000
-f2=5e5
+f2=6e5
 freq=np.concatenate((np.logspace(np.log10(f1), np.log10(fmid), pasos1), np.logspace(np.log10(fmid), np.log10(f2), pasos2)))
 avg=8
 
@@ -31,7 +31,7 @@ instrumento.write('wgen:outp 1')
 instrumento.write(f'wgen:func sin;volt {Vi};freq {freq[0]};volt:offs 1')
 instrumento.write('autoscale')
 instrumento.write(f'chan1:range {Vi*2.5}V')
-instrumento.write('chan2:offset 3V')
+instrumento.write('chan2:offset 2V')
 instrumento.write('chan1:offset 1V')
 
 

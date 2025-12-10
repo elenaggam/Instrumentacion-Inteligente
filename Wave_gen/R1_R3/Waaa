@@ -1,4 +1,4 @@
-R1		Freq_tr(Hz)		V_tr(V)		DC_tr(V)		Freq_sq(Hz)		V_sq(V)		DC_sq(V)		Phase(deg)	t	rise_tr(s)		fall_tr(s)		rise_sq(s)		fall_sq(s)
+R1		Freq_tr(Hz)	V_tr(V)		DC_tr(V)	Freq_sq(Hz)	V_sq(V)		DC_sq(V)	Phase(deg)	t	rise_tr(s)		fall_tr(s)		rise_sq(s)		fall_sq(s)
 255		1728.90		1.5300		4.6632		1731.90		8.9700		4.7010		85.20		0.000203		0.000229		0.000022		0.000026
 254		1733.10		1.5200		4.6654		1734.90		8.9000		4.7050		85.30		0.000203		0.000233		0.000022		0.000026
 253		1736.70		1.5200		4.6654		1736.10		8.9700		4.7010		85.50		0.000203		0.000232		0.000022		0.000026

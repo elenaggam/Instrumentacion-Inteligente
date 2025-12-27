@@ -1,0 +1,72 @@
+const int CS_PIN   = 10;
+const int DIN_PIN  = 5;  // Data In
+const int SCLK_PIN = 13; // Clock
+const float r2 = 226;
+const int option = 1;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(CS_PIN, OUTPUT);
+  pinMode(DIN_PIN, OUTPUT);
+  pinMode(SCLK_PIN, OUTPUT);
+
+  digitalWrite(CS_PIN, HIGH);
+  digitalWrite(SCLK_PIN, LOW);
+
+  Serial.println("Control de MAX5415 listo");
+}
+
+void loop() {
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+
+    // Formato esperado:    POT 0 o 1 
+    // Significa: potenciómetro 
+    int separador = input.indexOf(','); 
+
+    if (option==0){
+      int v1 = input.substring(0, separador).toInt();      // valor 0-255
+      float r1 = v1*42/255;
+      float r3 = r1*r2/(r1+r2);
+      int v3 = int(r3*255/42);
+
+      setPot(0, v1);
+      setPot(1, v3);
+    }
+
+    if (option==1){
+      int vf = input.substring(0, separador).toInt();      // valor 0-255
+      int v3 = input.substring(separador+1).toInt();
+      Serial.print(vf);
+      Serial.print(", ");
+      Serial.print(v3);
+      Serial.print("\n");
+      setPot(0, vf);
+      setPot(1, v3);
+    }
+    
+    
+  }
+
+}
+
+void setPot(byte cmd, byte value) {
+  digitalWrite(CS_PIN, LOW);
+
+  int data = (cmd << 8) | value;
+
+  for (int i = 8; i >= 0; i--) {
+    digitalWrite(DIN_PIN, (data >> i) & 0x01);
+    pulseClock();
+  }
+
+  digitalWrite(CS_PIN, HIGH);
+}
+
+void pulseClock() {
+  digitalWrite(SCLK_PIN, HIGH);
+  delayMicroseconds(1);
+  digitalWrite(SCLK_PIN, LOW);
+  delayMicroseconds(1);
+}

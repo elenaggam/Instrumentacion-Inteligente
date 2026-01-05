@@ -78,6 +78,21 @@ if fija == 'k':
             plt.savefig(dir_out+f'{intR3}_1.png', dpi=300)
             plt.clf()
 
+
+            plt.plot(f_teo, freq_tr, 'o')
+            plt.plot(f_teo, f_teo, 'k--', label='y=x')
+            plt.xlabel('Freq_teo (Hz)')
+            plt.ylabel('Freq_meas (Hz)')
+            # plt.show()
+            f_left = (R2)/(4*C*(R_left*1e3+Rfs)*(R3+R3s))
+            f_right = (R2)/(4*C*(R_right*1e3+Rfs)*(R3+R3s))
+            plt.axvline(x=f_left, color='red', linestyle='--', label='Rf limits')
+            plt.title(f'Limits for tol = {t}%: f_left = {f_left:.2f} Hz, f_right = {f_right:.2f} Hz')
+            plt.axvline(x=f_right, color='red', linestyle='--')
+            plt.savefig(dir_out+f'{intR3}_2.png', dpi=300)
+            plt.clf()
+
+
             plt.plot(Rf/1000, V_tr, 'o-')
             plt.plot(Rf/1000, V_sq, 's-')
             plt.axhline(y=10, color='red', linestyle='--')

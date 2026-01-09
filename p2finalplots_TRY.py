@@ -4,19 +4,59 @@ import Analysis as A
 import Plotting as P
 import os
 
+
+
+def get_lims(a, t, f, Rf):
+    # vamos de intRF alto a bajo, de frecs bajas a altas
+    # a tiene un minimo 
+    switch = 0
+    R_low = Rf[-1]/1000
+    R_high = Rf[0]/1000
+    f_low = f[0]
+    f_high = f[-1]
+
+    for i in range(len(a)):
+        if switch == 0 and a[i] < t:
+            R_high = Rf[i]/1000
+            f_low = f[i]
+            # print(R_right)
+            switch = 1
+        if switch == 1 and a[i] > t:
+            R_low = Rf[i-1]/1000
+            f_high = f[i-1]
+            # print(R_left)
+            break
+
+    return [R_low, R_high], [f_low, f_high]
+
+def plot_limits(a, b, color='red'):
+    if color == 'red':
+        label='Symmetry limits'
+    elif color == 'orange':
+        label='Frequency limits'
+    plt.axvline(x=a, color=color, linestyle='--', label=label)
+    plt.axvline(x=b, color=color, linestyle='--')
+
 fija = 'k'
+criterio = 'a'  # a: simetría, b: frecuencia, c: ambas
 
 R1 = 98.1e3
 R2 = 98.5e3
 R3s = 67.8e3
 Rfs = 32.8e3
 C = 9.29e-9
+R_1 = [None, None]
+f_1 = [None, None]
+R_2 = [None, None]
+f_2 = [None, None]
 
-tol = [5, 10, 15, 20]
+t = 10 # tol percentage
+max_N = 0 # cantidad de puntos en un rango por debajo de tol
+best_K = 0
 
 if fija == 'k':
 
-    intR3LISTA = [5, 105, 255]
+    intR3LISTA = [5, 30, 55, 80, 105, 127, 130, 155, 155, 180, 205, 230, 255]
     dir = 'Wave_gen/Rf/k_fija/'
 
     for intR3 in intR3LISTA:
@@ -29,158 +69,213 @@ if fija == 'k':
 
         f_teo = (R2)/(4*C*(Rf+Rfs)*(R3+R3s))
 
+
         epsilon = np.abs((freq_sq - f_teo)/f_teo)*100
+        S = np.abs(t_up_tr - t_down_tr) / (t_up_tr + t_down_tr) * 100
+        
+        if criterio == 'a': #primero simetría
+            N=0
+            for i in range(len(S)):
+                if S[i] < t:
+                    N +=1
+            if N > max_N:
+                max_N = N
+                best_K = intR3
+                R_1, f_1 = get_lims(S, t, freq_tr, Rf)
+                R_2, f_2 = get_lims(epsilon, t, freq_tr, Rf)
 
-        plt.plot(Rf/1000, epsilon, 'o-')
-        for t in tol:
-            plt.axhline(y=t, linestyle='--', label=f'Tol = {t}%')
-            plt.xlabel('Rf (kOhm)')
-            plt.ylabel('Relative Error (%)')
-            plt.legend()
-
-            dir_out = f'Graphs/k_relativo_f/{t}/'
-            if not os.path.exists(dir_out):
-                os.makedirs(dir_out)
-                print(f'Directory {dir_out} created.')
-        plt.savefig(f'Graphs/k_relativo_f/{intR3}_0.png', dpi=300)
-        plt.clf()
-
-        for t in tol:
-            dir_out = f'Graphs/k_relativo_f/{t}/'
-            switch = 0
-            R_left = 0
-            R_right = 0
+        elif criterio == 'b': #primero frecuencia
+            N=0
             for i in range(len(epsilon)):
-                if switch == 0 and epsilon[i] < t:
-                    R_right = Rf[i-1]/1000
-                    # print(R_right)
-                    switch = 1
-                if switch == 1 and epsilon[i] > t:
-                    R_left = Rf[i-1]/1000
-                    # print(R_left)
-                    break
-            if R_right == 0:
-                R_right = Rf[0]/1000
-                # print(R_right)
+                if epsilon[i] < t:
+                    N +=1
+            if N > max_N:
+                max_N = N
+                best_K = intR3
+                R_1, f_1 = get_lims(S, t, freq_tr, Rf)
+                R_2, f_2 = get_lims(epsilon, t, freq_tr, Rf)
+
+        elif criterio == 'c': #simetría y frecuencia
+            N=0
+            for i in range(len(S)):
+                if S[i] < t and epsilon[i] < t:
+                    N +=1
+            if N > max_N:
+                max_N = N
+                best_K = intR3
+                R_1, f_1 = get_lims(S, t, freq_tr, Rf)
+                R_2, f_2 = get_lims(epsilon, t, freq_tr, Rf)
 
 
-            plt.plot(Rf/1000, f_teo, '-', label='Freq_tr', color='orange')
-            plt.plot(Rf/1000, freq_sq, 's-', label='Freq_sq', color='green')
-            plt.plot(Rf/1000, (f_teo-f_teo[-1])/(f_teo[0]-f_teo[-1])*(freq_sq[0]-freq_sq[-1])+freq_sq[-1], 'k--', label='Freq_sq ajustada')
-            plt.scatter(Rf/1000, freq_tr, label='Freq_meas')
-            plt.legend()
-            plt.xlabel('Rf (kOhm)')
-            plt.ylabel('Frequency (Hz)')
-            # plt.show()
-            plt.axvline(x=R_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: R_left = {R_left:.2f} kOhm, R_right = {R_right:.2f} kOhm')
-            plt.axvline(x=R_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_1.png', dpi=300)
-            plt.clf()
+        
+
+    dir_out = f'Graphs/k_relativo_f/{t}/'+criterio+'/'
+    if not os.path.exists(dir_out):
+        os.makedirs(dir_out)
+        
+    intR3 = best_K
+    intRf, freq_tr, V_tr, DC_tr, freq_sq, V_sq, DC_sq, phas, t_up_tr, t_down_tr, t_up_sq, t_down_sq, top_tr, base_tr, top_sq, base_sq = np.loadtxt(dir+f'{intR3}_avg8_Vcc10.txt', unpack=True, skiprows=1)
+    Rf = intRf / 255 * 42.0e3
+    R3 = intR3 / 255 * 42.0e3
+    f_teo = (R2)/(4*C*(Rf+Rfs)*(R3+R3s))
+    print(f'The best R3 int is: {intR3}, which gives max N = {max_N}')
+
+    S = np.abs(t_up_tr - t_down_tr) / (t_up_tr + t_down_tr) * 100
+    epsilon = np.abs((freq_sq - f_teo)/f_teo)*100
+
+    Ns = 0
+    Ne = 0
+    N = 0
+    avg_S = 0
+    avg_epsilon = 0
+    for i in range(len(S)):
+        if S[i] < t:
+            Ns +=1
+        if epsilon[i] < t:
+            Ne +=1
+        if S[i] < t and epsilon[i] < t:
+            avg_epsilon += epsilon[i]
+            avg_S += S[i]
+            N +=1
+    avg_S /= N
+    avg_epsilon /= N
+    file = open(dir_out+f'{intR3}_log.txt', 'w')
+    file.write(f'Best R3 int: {intR3}\n')
+    file.write(f'Which gives max Ns = {Ns}\n')
+    file.write(f'Which gives max Ne = {Ne}\n')
+    file.write(f'Which gives max N_intersection = {N}\n')
+    file.write(f'average S = {avg_S:.2f} % in intersection\n')
+    file.write(f'average epsilon = {avg_epsilon:.2f} % in intersection\n')
+    file.write(f'R limts (kOhm): R_S = {R_1[0]:.2f} - {R_1[1]:.2f}\n')
+    file.write(f'f limits (Hz): f_S = {f_1[0]:.1f} - {f_1[1]:.1f}\n')
+    file.write(f'R limits (kOhm): R_eps = {R_2[0]:.2f} - {R_2[1]:.2f}\n')
+    file.write(f'f limits (Hz): f_eps = {f_2[0]:.1f} - {f_2[1]:.1f}\n')
+    file.close()
+
+    plt.plot(freq_tr, S, 'o-')
+    plt.axhline(y=t, color='grey', linestyle='--', label='tolerance')
+    plt.xlabel('f (Hz)')
+    plt.ylabel('Asymmetry (%)')
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.legend()
+    plt.savefig(dir_out+f'{intR3}_symmetry.png', dpi=300)
+    plt.clf()
+    
+    plt.plot(freq_tr, epsilon, 'o-')
+    plt.axhline(y=t, color='grey', linestyle='--', label='tolerance')
+    plt.xlabel('f (Hz)')
+    plt.ylabel('Frequency error (%)')
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.legend()
+    plt.savefig(dir_out+f'{intR3}_frequency_error.png', dpi=300)
+    plt.clf()
 
 
-            plt.plot(f_teo, freq_tr, 'o')
-            plt.plot(f_teo, f_teo, 'k--', label='y=x')
-            plt.xlabel('Freq_teo (Hz)')
-            plt.ylabel('Freq_meas (Hz)')
-            # plt.show()
-            f_left = (R2)/(4*C*(R_left*1e3+Rfs)*(R3+R3s))
-            f_right = (R2)/(4*C*(R_right*1e3+Rfs)*(R3+R3s))
-            plt.axvline(x=f_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: f_left = {f_left:.2f} Hz, f_right = {f_right:.2f} Hz')
-            plt.axvline(x=f_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_2.png', dpi=300)
-            plt.clf()
+
+    plt.plot(Rf/1000, f_teo, '-', label='Freq_tr', color='orange')
+    plt.plot(Rf/1000, freq_sq, 's-', label='Freq_sq', color='green')
+    plt.plot(Rf/1000, (f_teo-f_teo[-1])/(f_teo[0]-f_teo[-1])*(freq_sq[0]-freq_sq[-1])+freq_sq[-1], 'k--', label='Freq_sq ajustada')
+    plt.scatter(Rf/1000, freq_tr, label='Freq_meas')
+    plt.xlabel('Rf (kOhm)')
+    plt.ylabel('Frequency (Hz)')
+    # plt.show()
+    plot_limits(R_2[0], R_2[1], color='orange')
+    plot_limits(R_1[0], R_1[1])
+    plt.legend()
+    plt.savefig(dir_out+f'{intR3}_1.png', dpi=300)
+    plt.clf()
 
 
-            plt.plot(Rf/1000, V_tr, 'o-')
-            plt.plot(Rf/1000, V_sq, 's-')
-            plt.axhline(y=10, color='red', linestyle='--')
-            plt.axhline(y=10*(R3+R3s)/R2, color='blue', linestyle='--')
-            plt.axhline(y=V_sq[0]*(R3+R3s)/R2, color='green', linestyle='--')
-            plt.legend(['V_tr', 'V_sq', 'Vcc', 'Vcc*R3/R2', 'V_tr con V_sq real'])
-            plt.xlabel('Rf (kOhm)')
-            plt.ylabel('Voltaje (V)')
-            # plt.show()
-            plt.axvline(x=R_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: R_left = {R_left:.2f} kOhm, R_right = {R_right:.2f} kOhm')
-            plt.axvline(x=R_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_3.png', dpi=300)
-            plt.clf()
+    plt.plot(f_teo, freq_tr, 'o')
+    plt.plot(f_teo, f_teo, 'k--', label='y=x')
+    plt.xlabel('Freq_teo (Hz)')
+    plt.ylabel('Freq_meas (Hz)')
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.legend()
+    plt.savefig(dir_out+f'{intR3}_2.png', dpi=300)
+    plt.clf()
 
-            plt.plot(Rf/1000, V_tr/V_sq, 'd-')
-            plt.axhline(y=(R3+R3s)/R2, color='k', linestyle='--', label='V_tr/V_sq teo')
-            plt.xlabel('Rf (kOhm)')
-            plt.ylabel('V_tr/V_sq')
-            # plt.show()
-            plt.axvline(x=R_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: R_left = {R_left:.2f} kOhm, R_right = {R_right:.2f} kOhm')
-            plt.axvline(x=R_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_4.png', dpi=300)
-            plt.clf()
 
-            plt.plot(Rf/1000, phas, 'd-')
-            plt.xlabel('Rf (kOhm)')
-            plt.ylabel('Phase (deg)')
-            # plt.show()
-            plt.axvline(x=R_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: R_left = {R_left:.2f} kOhm, R_right = {R_right:.2f} kOhm')
-            plt.axvline(x=R_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_5.png', dpi=300)
-            plt.clf()
+    plt.plot(freq_tr, V_tr, 'o-')
+    plt.plot(freq_tr, V_sq, 's-')
+    plt.axhline(y=10, color='red', linestyle='--')
+    plt.axhline(y=10*(R3+R3s)/R2, color='blue', linestyle='--')
+    plt.axhline(y=V_sq[0]*(R3+R3s)/R2, color='green', linestyle='--')
+    plt.legend(['V_tr', 'V_sq', 'Vcc', 'Vcc*R3/R2', 'V_tr con V_sq real'])
+    plt.xlabel('f (Hz)')
+    plt.ylabel('Voltaje (V)')
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.savefig(dir_out+f'{intR3}_3.png', dpi=300)
+    plt.clf()
 
-            plt.plot(Rf/1000, DC_tr, 'o-')
-            plt.plot(Rf/1000, DC_sq, 's-')
-            plt.legend(['DC_tr', 'DC_sq'])
-            plt.xlabel('Rf (kOhm)')
-            plt.ylabel('Duty Cycle (%)')
-            # plt.show()
-            plt.axvline(x=R_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: R_left = {R_left:.2f} kOhm, R_right = {R_right:.2f} kOhm')
-            plt.axvline(x=R_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_6.png', dpi=300)
-            plt.clf()
+    plt.plot(freq_tr, V_tr/V_sq, 'd-')
+    plt.axhline(y=(R3+R3s)/R2, color='k', linestyle='--', label='V_tr/V_sq teo')
+    plt.xlabel('f (Hz)')
+    plt.ylabel('V_tr/V_sq')
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.savefig(dir_out+f'{intR3}_4.png', dpi=300)
+    plt.clf()
 
-            plt.plot(Rf/1000, t_up_tr*1e3, 'o-')
-            plt.plot(Rf/1000, t_down_tr*1e3, 'o--')
-            plt.plot(Rf/1000, t_up_sq*1e3, 's-')
-            plt.plot(Rf/1000, t_down_sq*1e3, 's--')
-            plt.plot(Rf/1000, (1/(2*f_teo))*1e3, 'k--', label='t_teo')
-            plt.legend(['t_up_tr', 't_down_tr', 't_up_sq', 't_down_sq', 't_teo'])
-            plt.xlabel('Rf (kOhm)') 
-            plt.ylabel('Time (ms)')
-            # plt.show()
-            plt.axvline(x=R_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: R_left = {R_left:.2f} kOhm, R_right = {R_right:.2f} kOhm')
-            plt.axvline(x=R_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_7.png', dpi=300)
-            plt.clf()
+    plt.plot(freq_tr, phas, 'd-')
+    plt.xlabel('f (Hz)')
+    plt.ylabel('Phase (deg)')
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.savefig(dir_out+f'{intR3}_5.png', dpi=300)
+    plt.clf()
 
-            plt.plot(Rf/1000, top_tr, 'o-')
-            plt.plot(Rf/1000, base_tr, 'o--')
-            plt.legend(['top_tr', 'base_tr'])
-            plt.xlabel('Rf (kOhm)')
-            plt.ylabel('Voltage (V)')
-            # plt.show()
-            plt.axvline(x=R_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: R_left = {R_left:.2f} kOhm, R_right = {R_right:.2f} kOhm')
-            plt.axvline(x=R_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_8.png', dpi=300)
-            plt.clf()
+    plt.plot(freq_tr, DC_tr, 'o-')
+    plt.plot(freq_tr, DC_sq, 's-')
+    plt.legend(['DC_tr', 'DC_sq'])
+    plt.xlabel('f (Hz)')
+    plt.ylabel('Duty Cycle (%)')
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.savefig(dir_out+f'{intR3}_6.png', dpi=300)
+    plt.clf()
 
-            plt.plot(Rf/1000, top_sq, 's-')
-            plt.plot(Rf/1000, base_sq, 's--')
-            plt.axhline(y=10, color='red', linestyle='--')
-            plt.axhline(y=0, color='blue', linestyle='--')
-            plt.legend(['top_sq', 'base_sq'])
-            plt.xlabel('Rf (kOhm)')
-            plt.ylabel('Voltage (V)')
-            # plt.show()
-            plt.axvline(x=R_left, color='red', linestyle='--', label='Rf limits')
-            plt.title(f'Limits for tol = {t}%: R_left = {R_left:.2f} kOhm, R_right = {R_right:.2f} kOhm')
-            plt.axvline(x=R_right, color='red', linestyle='--')
-            plt.savefig(dir_out+f'{intR3}_9.png', dpi=300)
-            plt.clf()
+    plt.plot(freq_tr, t_up_tr*1e3, 'o-')
+    plt.plot(freq_tr, t_down_tr*1e3, 'o--')
+    plt.plot(freq_tr, t_up_sq*1e3, 's-')
+    plt.plot(freq_tr, t_down_sq*1e3, 's--')
+    plt.plot(freq_tr, (1/(2*f_teo))*1e3, 'k--', label='t_teo')
+    plt.legend(['t_up_tr', 't_down_tr', 't_up_sq', 't_down_sq', 't_teo'])
+    plt.xlabel('f (Hz)') 
+    plt.ylabel('Time (ms)')
+    # plt.show()
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.savefig(dir_out+f'{intR3}_7.png', dpi=300)
+    plt.clf()
+
+    plt.plot(freq_tr, top_tr, 'o-')
+    plt.plot(freq_tr, base_tr, 'o--')
+    plt.legend(['top_tr', 'base_tr'])
+    plt.xlabel('f (Hz)')
+    plt.ylabel('Voltage (V)')
+    # plt.show()
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.savefig(dir_out+f'{intR3}_8.png', dpi=300)
+    plt.clf()
+
+    plt.plot(freq_tr, top_sq, 's-')
+    plt.plot(freq_tr, base_sq, 's--')
+    plt.axhline(y=10, color='red', linestyle='--')
+    plt.axhline(y=0, color='blue', linestyle='--')
+    plt.legend(['top_sq', 'base_sq'])
+    plt.xlabel('f (Hz)')
+    plt.ylabel('Voltage (V)')
+    # plt.show()
+    plot_limits(f_2[0], f_2[1], color='orange')
+    plot_limits(f_1[0], f_1[1])
+    plt.savefig(dir_out+f'{intR3}_9.png', dpi=300)
+    plt.clf()
 
 
 elif fija == 'f':

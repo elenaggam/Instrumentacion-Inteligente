@@ -1,0 +1,10 @@
+Best R3 int: 5
+Which gives max Ns = 31
+Which gives max Ne = 30
+Which gives max N_intersection = 9
+average S = 6.64 % in intersection
+average epsilon = 6.51 % in intersection
+R limts (kOhm): R_S = 0.00 - 24.71
+f limits (Hz): f_S = 647.8 - 903.5
+R limits (kOhm): R_eps = 18.12 - 42.00
+f limits (Hz): f_eps = 565.6 - 686.8

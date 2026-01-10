@@ -29,13 +29,13 @@ def get_lims(a, t, f, Rf):
 
     return [R_low, R_high], [f_low, f_high]
 
-def plot_limits(a, b, color='red'):
-    if color == 'red':
-        label='Symmetry limits'
-    elif color == 'orange':
-        label='Frequency limits'
-    plt.axvline(x=a, color=color, linestyle='--', label=label)
+def plot_limits(a, b, color='gray'):
+    plt.axvline(x=a, color=color, linestyle='--')
     plt.axvline(x=b, color=color, linestyle='--')
+
+def get_intersection(lim1, lim2):
+    sorted = np.sort([lim1[0], lim1[1], lim2[0], lim2[1]])
+    return [sorted[1], sorted[2]]
 
 fija = 'k'
 criterio = 'a'  # a: simetría, b: frecuencia, c: ambas
@@ -122,6 +122,8 @@ if fija == 'k':
 
     S = np.abs(t_up_tr - t_down_tr) / (t_up_tr + t_down_tr) * 100
     epsilon = np.abs((freq_sq - f_teo)/f_teo)*100
+    R = get_intersection(R_1, R_2)
+    f = get_intersection(f_1, f_2)
 
     Ns = 0
     Ne = 0
@@ -180,9 +182,9 @@ if fija == 'k':
     plt.scatter(Rf/1000, freq_tr, label='Freq_meas')
     plt.xlabel('Rf (kOhm)')
     plt.ylabel('Frequency (Hz)')
-    # plt.show()
-    plot_limits(R_2[0], R_2[1], color='orange')
-    plot_limits(R_1[0], R_1[1])
+    plot_limits(R_1[0], R_1[1], color='orange')
+    plot_limits(R_2[0], R_2[1], color='green')
+    plot_limits(R[0], R[1])
     plt.legend()
     plt.savefig(dir_out+f'{intR3}_1.png', dpi=300)
     plt.clf()
@@ -192,8 +194,9 @@ if fija == 'k':
     plt.plot(f_teo, f_teo, 'k--', label='y=x')
     plt.xlabel('Freq_teo (Hz)')
     plt.ylabel('Freq_meas (Hz)')
-    plot_limits(f_2[0], f_2[1], color='orange')
-    plot_limits(f_1[0], f_1[1])
+    plot_limits(f_1[0], f_1[1], color='orange')
+    plot_limits(f_2[0], f_2[1], color='green')
+    plot_limits(f[0], f[1])
     plt.legend()
     plt.savefig(dir_out+f'{intR3}_2.png', dpi=300)
     plt.clf()
@@ -207,8 +210,9 @@ if fija == 'k':
     plt.legend(['V_tr', 'V_sq', 'Vcc', 'Vcc*R3/R2', 'V_tr con V_sq real'])
     plt.xlabel('f (Hz)')
     plt.ylabel('Voltaje (V)')
-    plot_limits(f_2[0], f_2[1], color='orange')
-    plot_limits(f_1[0], f_1[1])
+    plot_limits(f_1[0], f_1[1], color='orange')
+    plot_limits(f_2[0], f_2[1], color='green')
+    plot_limits(f[0], f[1])
     plt.savefig(dir_out+f'{intR3}_3.png', dpi=300)
     plt.clf()
 
@@ -216,16 +220,18 @@ if fija == 'k':
     plt.axhline(y=(R3+R3s)/R2, color='k', linestyle='--', label='V_tr/V_sq teo')
     plt.xlabel('f (Hz)')
     plt.ylabel('V_tr/V_sq')
-    plot_limits(f_2[0], f_2[1], color='orange')
-    plot_limits(f_1[0], f_1[1])
+    plot_limits(f_1[0], f_1[1], color='orange')
+    plot_limits(f_2[0], f_2[1], color='green')
+    plot_limits(f[0], f[1])
     plt.savefig(dir_out+f'{intR3}_4.png', dpi=300)
     plt.clf()
 
     plt.plot(freq_tr, phas, 'd-')
     plt.xlabel('f (Hz)')
     plt.ylabel('Phase (deg)')
-    plot_limits(f_2[0], f_2[1], color='orange')
-    plot_limits(f_1[0], f_1[1])
+    plot_limits(f_1[0], f_1[1], color='orange')
+    plot_limits(f_2[0], f_2[1], color='green')
+    plot_limits(f[0], f[1])
     plt.savefig(dir_out+f'{intR3}_5.png', dpi=300)
     plt.clf()
 
@@ -234,8 +240,9 @@ if fija == 'k':
     plt.legend(['DC_tr', 'DC_sq'])
     plt.xlabel('f (Hz)')
     plt.ylabel('Duty Cycle (%)')
-    plot_limits(f_2[0], f_2[1], color='orange')
-    plot_limits(f_1[0], f_1[1])
+    plot_limits(f_1[0], f_1[1], color='orange')
+    plot_limits(f_2[0], f_2[1], color='green')
+    plot_limits(f[0], f[1])
     plt.savefig(dir_out+f'{intR3}_6.png', dpi=300)
     plt.clf()
 
@@ -247,9 +254,9 @@ if fija == 'k':
     plt.legend(['t_up_tr', 't_down_tr', 't_up_sq', 't_down_sq', 't_teo'])
     plt.xlabel('f (Hz)') 
     plt.ylabel('Time (ms)')
-    # plt.show()
-    plot_limits(f_2[0], f_2[1], color='orange')
-    plot_limits(f_1[0], f_1[1])
+    plot_limits(f_1[0], f_1[1], color='orange')
+    plot_limits(f_2[0], f_2[1], color='green')
+    plot_limits(f[0], f[1])
     plt.savefig(dir_out+f'{intR3}_7.png', dpi=300)
     plt.clf()
 
@@ -258,9 +265,9 @@ if fija == 'k':
     plt.legend(['top_tr', 'base_tr'])
     plt.xlabel('f (Hz)')
     plt.ylabel('Voltage (V)')
-    # plt.show()
-    plot_limits(f_2[0], f_2[1], color='orange')
-    plot_limits(f_1[0], f_1[1])
+    plot_limits(f_1[0], f_1[1], color='orange')
+    plot_limits(f_2[0], f_2[1], color='green')
+    plot_limits(f[0], f[1])
     plt.savefig(dir_out+f'{intR3}_8.png', dpi=300)
     plt.clf()
 
@@ -271,9 +278,9 @@ if fija == 'k':
     plt.legend(['top_sq', 'base_sq'])
     plt.xlabel('f (Hz)')
     plt.ylabel('Voltage (V)')
-    # plt.show()
-    plot_limits(f_2[0], f_2[1], color='orange')
-    plot_limits(f_1[0], f_1[1])
+    plot_limits(f_1[0], f_1[1], color='orange')
+    plot_limits(f_2[0], f_2[1], color='green')
+    plot_limits(f[0], f[1])
     plt.savefig(dir_out+f'{intR3}_9.png', dpi=300)
     plt.clf()
 

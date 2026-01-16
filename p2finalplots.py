@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import Analysis as A
-import Plotting as P
 
 fija = 'f'
 

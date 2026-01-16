@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import Analysis as A
-import Plotting as P
 import os
 
 color_palette = ["#003F5C", "#EE1E1E", "#7A5195", "#1051C0",
@@ -42,7 +40,7 @@ def get_intersection(lim1, lim2):
     sorted = np.sort([lim1[0], lim1[1], lim2[0], lim2[1]])
     return [sorted[1], sorted[2]]
 
-fija = 'k'
+fija = 'f'
 criterio = 'c'  # a: simetría, b: frecuencia, c: ambas
 
 R1 = 98.1e3
@@ -328,28 +326,33 @@ if fija == 'k':
 
 elif fija == 'f':
 
-    fLISTA = np.arange(330, 1091, 20)
+    fLISTA = [550]
     dir = 'Wave_gen/Rf/f_fija/'
 
     for f in fLISTA:
 
         intRf, intR3, freq_tr, V_tr, DC_tr, freq_sq, V_sq, DC_sq, phas, t_up_tr, t_down_tr, t_up_sq, t_down_sq, top_tr, base_tr, top_sq, base_sq = np.loadtxt(dir+f'{f:.2f}_avg8_Vcc10.txt', unpack=True, skiprows=1)
 
-        R3 = intR3 / 255 * 42.0e3
-        Rf = intRf / 255 * 42.0e3
+        R3 = intR3 / 255 * 42.0e3 + R3s
+        Rf = intRf / 255 * 42.0e3 + Rfs
 
-        K = (R3+R3s)/R2
+        K = R3/R2
 
-        f_teo = (R2)/(4*C*(Rf+Rfs)*(R3+R3s))
+        f_teo = (R2)/(4*C*Rf*R3)
 
-        plt.plot(K, f_teo, '-', label='Freq_tr', color='orange')
-        plt.plot(K, freq_sq, 's-', label='Freq_sq', color='green')
-        plt.scatter(K, freq_tr, label='Freq_meas')
+     
+        plt.grid(zorder=0)
+        plt.plot(K, f_teo, '-', lw=2, label=r'$f_{teo}$', color=color_palette[5], zorder = 4)
+        plt.plot(K, freq_sq, 's-', label=r'$f_{□,exp}$', color=color_palette[3], zorder = 2, markersize =7)
+        plt.plot(K, freq_tr, 'o-', label=r'$f_{\triangle,exp}$', color = color_palette[4], zorder = 3, markersize =5)
         plt.legend()
-        plt.xlabel('K')
-        plt.ylabel('Frequency (Hz)')
+        plt.xlabel(r'$k$', fontsize=14)
+        plt.ylabel(r'$f$ (Hz)', fontsize=14)
+        plt.legend(fontsize=14, loc='upper right')
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12) 
         # plt.show()
-        plt.savefig(f'Graphs/f_fija/{f}_1.png', dpi=300)
+        plt.savefig(f'Graphs/f_fija/{f}_1.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
         plt.plot(f_teo, freq_tr, 'o')
@@ -357,19 +360,21 @@ elif fija == 'f':
         plt.xlabel('Freq_teo (Hz)')
         plt.ylabel('Freq_meas (Hz)')
         # plt.show()
-        plt.savefig(f'Graphs/f_fija/{f}_2.png', dpi=300)
+        plt.savefig(f'Graphs/f_fija/{f}_2.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
-        plt.plot(K, V_tr, 'o-')
-        plt.plot(K, V_sq, 's-')
-        plt.axhline(y=10, color='red', linestyle='--')
-        plt.plot(K, 10*K, color='blue', linestyle='--')
-        plt.plot(K, V_sq[0]*K, color='green', linestyle='--')
-        plt.legend(['V_tr', 'V_sq', 'Vcc', 'Vcc*R3/R2', 'V_tr con V_sq real'])
-        plt.xlabel('K')
-        plt.ylabel('Voltaje (V)')
+        plt.grid(zorder=0)
+        plt.plot(K, V_tr, 'o-', label=r'$V_{pp,\triangle}$', color = color_palette[4], zorder = 3, markersize =6)
+        plt.plot(K, V_sq, 's-', label=r'$V_{pp,□}$', color=color_palette[3], zorder = 2, markersize =6)
+        plt.axhline(y=10, color='gray', linestyle='--', zorder=1, label='$V_{cc}$')
+        plt.plot(K, V_sq[0]*K, color='green', linestyle='--', label=r'$V_{pp,□}\cdot k$', zorder=4)
+        plt.legend(fontsize=14, loc='lower right')
+        plt.xlabel(r'$k$', fontsize=14)
+        plt.ylabel(r'$V_{pp}$ (V)', fontsize=14)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
         # plt.show()
-        plt.savefig(f'Graphs/f_fija/{f}_3.png', dpi=300)
+        plt.savefig(f'Graphs/f_fija/{f}_3.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
         plt.plot(K, V_tr/V_sq, 'd-')
@@ -377,14 +382,17 @@ elif fija == 'f':
         plt.xlabel('K')
         plt.ylabel('V_tr/V_sq')
         # plt.show()
-        plt.savefig(f'Graphs/f_fija/{f}_4.png', dpi=300)
+        plt.savefig(f'Graphs/f_fija/{f}_4.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
-        plt.plot(K, phas, 'd-')
-        plt.xlabel('K')
-        plt.ylabel('Phase (deg)')
+        plt.grid(zorder=0)
+        plt.plot(K, phas, 'o-', zorder=2, markersize=6)
+        plt.xlabel(r'$k$', fontsize=14)
+        plt.ylabel(r'Desfase ($^\circ$)', fontsize=14)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
         # plt.show()
-        plt.savefig(f'Graphs/f_fija/{f}_5.png', dpi=300)
+        plt.savefig(f'Graphs/f_fija/{f}_5.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
         plt.plot(K, DC_tr, 'o-')
@@ -393,28 +401,36 @@ elif fija == 'f':
         plt.xlabel('K')
         plt.ylabel('Duty Cycle (%)')
         # plt.show()
-        plt.savefig(f'Graphs/f_fija/{f}_6.png', dpi=300)
+        plt.savefig(f'Graphs/f_fija/{f}_6.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
-        plt.plot(K, t_up_tr*1e3, 'o-')
-        plt.plot(K, t_down_tr*1e3, 'o--')
-        plt.plot(K, t_up_sq*1e3, 's-')
-        plt.plot(K, t_down_sq*1e3, 's--')
-        plt.plot(K, (1/(2*f_teo))*1e3, 'k--', label='t_teo')
-        plt.legend(['t_up_tr', 't_down_tr', 't_up_sq', 't_down_sq', 't_teo'])
-        plt.xlabel('K') 
-        plt.ylabel('Time (ms)')
+        plt.grid(zorder=0)
+        plt.plot(K, t_up_sq*1e3, 's-', zorder=3, label = r'$t_{u,□}$', markersize=6, color = color_palette[-1])
+        plt.plot(K, t_down_sq*1e3, 'o-', zorder=4, label = r'$t_{d,□}$', markersize=6, color = color_palette[1]) 
+        plt.plot(K, t_up_tr*1e3, 's-', zorder=4, label = r'$t_{u,\triangle}$', markersize=6, color = color_palette[3]) 
+        plt.plot(K, t_down_tr*1e3, 'o-', zorder=4, label = r'$t_{d,\triangle}$', markersize=6, color = color_palette[4]) 
+        plt.plot(K, (1/(2*f_teo))*1e3, '-', lw=2, label=r'$t_{teo}$', zorder=2, color = color_palette[0]) 
+        plt.legend(fontsize=14,  loc='center right')
+        plt.xlabel(r'$k$', fontsize=14) 
+        plt.ylabel(r'$t$ (ms)', fontsize=14)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
         # plt.show()
-        plt.savefig(f'Graphs/f_fija/{f}_7.png', dpi=300)
+        plt.savefig(f'Graphs/f_fija/{f}_7.png', dpi=300, bbox_inches='tight')
         plt.clf()
-
-        plt.plot(K, top_tr, 'o-')
-        plt.plot(K, base_tr, 'o--')
-        plt.legend(['top_tr', 'base_tr'])
-        plt.xlabel('K')
-        plt.ylabel('Voltage (V)')
+    
+        plt.grid(zorder=0)
+        plt.plot(K, top_sq, 's-', markersize=6, color = color_palette[3], zorder=3, label = r'$V_{□}^{\uparrow}$')
+        plt.plot(K, base_sq, 's--', zorder=4, label = r'$V_{□}^{\downarrow}$', markersize=6, color = color_palette[-1])
+        plt.plot(K, top_tr, 'o-', zorder=4, label = r'$V_{\triangle}^{\uparrow}$', markersize=6, color = color_palette[4])
+        plt.plot(K, base_tr, 'o--', zorder=4, label = r'$V_{\triangle}^{\downarrow}$', markersize=6, color = color_palette[1])
+        plt.legend(fontsize=14, loc='center right')
+        plt.xlabel(r'$k$', fontsize=14)
+        plt.ylabel(r'$V$ (V)', fontsize=14)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
         # plt.show()
-        plt.savefig(f'Graphs/f_fija/{f}_8.png', dpi=300)
+        plt.savefig(f'Graphs/f_fija/{f}_8.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
         plt.plot(K, top_sq, 's-')
